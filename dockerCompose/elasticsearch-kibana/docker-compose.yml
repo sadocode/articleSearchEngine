@@ -1,0 +1,114 @@
+version: '3'
+services:
+        elasticsearch:
+                image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+                container_name: elasticsearch
+                environment:
+                        - node.name=elasticsearch
+                        - cluster.name=es-docker-cluster
+                        - discovery.seed_hosts=elasticsearch1,elasticsearch2,elasticsearch3
+                        - cluster.initial_master_nodes=elasticsearch
+                        - bootstrap.memory_lock=true
+                        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+                ulimits:
+                        memlock:
+                                soft: -1
+                                hard: -1
+                volumes:
+                        - c:/elsTemp/master:/usr/share/elasticsearch/data
+                        - c:/elsTemp/user_dictionary.txt:/usr/share/elasticsearch/config/user_dictionary.txt
+                ports:
+                        - 9200:9200
+                        - 9300:9300
+                networks:
+                        - elastic
+        elasticsearch1:
+                image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+                container_name: elasticsearch1
+                environment:
+                        - node.name=elasticsearch1
+                        - cluster.name=es-docker-cluster
+                        - discovery.seed_hosts=elasticsearch,elasticsearch2,elasticsearch3
+                        - cluster.initial_master_nodes=elasticsearch
+                        - bootstrap.memory_lock=true
+                        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+                ulimits:
+                        memlock:
+                                soft: -1
+                                hard: -1
+                volumes:
+                        - c:/elsTemp/data01:/usr/share/elasticsearch/data
+                        - c:/elsTemp/user_dictionary.txt:/usr/share/elasticsearch/config/user_dictionary.txt
+                networks:
+                        - elastic
+                depends_on:
+                        - elasticsearch
+
+        elasticsearch2:
+                image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+                container_name: elasticsearch2
+                environment:
+                        - node.name=elasticsearch2
+                        - cluster.name=es-docker-cluster
+                        - discovery.seed_hosts=elasticsearch,elasticsearch1,elasticsearch3
+                        - cluster.initial_master_nodes=elasticsearch
+                        - bootstrap.memory_lock=true
+                        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+                ulimits:
+                        memlock:
+                                soft: -1
+                                hard: -1
+                volumes:
+                        - c:/elsTemp/data02:/usr/share/elasticsearch/data
+                        - c:/elsTemp/user_dictionary.txt:/usr/share/elasticsearch/config/user_dictionary.txt
+                networks:
+                        - elastic
+                depends_on:
+                        - elasticsearch
+                        - elasticsearch1
+
+        elasticsearch3:
+                image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+                container_name: elasticsearch3
+                environment:
+                        - node.name=elasticsearch3
+                        - cluster.name=es-docker-cluster
+                        - discovery.seed_hosts=elasticsearch,elasticsearch1,elasticsearch2
+                        - cluster.initial_master_nodes=elasticsearch
+                        - bootstrap.memory_lock=true
+                        - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+                ulimits:
+                        memlock:
+                                soft: -1
+                                hard: -1
+                volumes:
+                        - c:/elsTemp/data03:/usr/share/elasticsearch/data
+                        - c:/elsTemp/user_dictionary.txt:/usr/share/elasticsearch/config/user_dictionary.txt
+                networks:
+                        - elastic
+                depends_on:
+                        - elasticsearch
+                        - elasticsearch1
+                        - elasticsearch2
+
+        kib:
+                image: docker.elastic.co/kibana/kibana:7.10.1
+                container_name: kib
+                ports:
+                        - 5601:5601
+                environment:
+                        # ELASTICSEARCH_URL: http://es_master:9200
+                        ELASTICSEARCH_HOST: http://elasticsearch:9200
+                       # ELASTICSEARCH_URL: http://localhost:
+                networks:
+                        - elastic
+                depends_on:
+                        - elasticsearch
+                        - elasticsearch1
+                        - elasticsearch2
+                        - elasticsearch3
+        
+               
+networks:
+        elastic:
+                driver: bridge

@@ -1,0 +1,25 @@
+version: '3'
+services:
+        logstash:
+                image: docker.elastic.co/logstash/logstash:7.10.1
+                container_name: logstash
+                volumes:
+                        - c:/elsTemp/logstash/logstash.conf/:/usr/share/logstash/pipeline/logstash.conf
+                          #- c:/elsTemp/logstash/logstash.yml/:/usr/share/logstash/config/logstassh.yml
+                command: logstash -f /usr/share/logstash/pipeline/logstash.conf
+                ports:
+                        - 5044:5044
+                        - 9600:9600
+        filebeat:
+                image: docker.elastic.co/beats/filebeat:7.10.1
+                container_name: filebeat
+                command: bash -c "filebeat -e -strict.perms=false && mkdir /usr/share/filebeat/hostShare"
+                volumes:
+                        - c:/elsTemp/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+                        - c:/app2/log:/usr/share/filebeat/hostShare
+                depends_on:
+                        - logstash
+networks:
+        default:
+                external:
+                        name: elasticsearch-kibana_elastic
